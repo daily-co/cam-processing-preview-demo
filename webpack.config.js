@@ -1,6 +1,8 @@
 const path = require("path");
+const CopyPlugin = require("copy-webpack-plugin");
 
 module.exports = {
+  mode: "development",
   entry: "./src/index.ts",
   module: {
     rules: [
@@ -21,4 +23,9 @@ module.exports = {
   devServer: {
     static: "./",
   },
+  plugins: [
+    new CopyPlugin({
+      patterns: [{ from: "index.html", to: "dist/" }],
+    }),
+  ],
 };

@@ -94,31 +94,59 @@ function setupEffectsChangeListener(previewer: DailyCall) {
   ) as HTMLSelectElement;
   effectsSelectElement.addEventListener("change", () => {
     const option = effectsSelectElement.selectedOptions[0];
-    let settings: DailyInputVideoProcessorSettings = { type: "none" };
+    let processorSettings: DailyInputVideoProcessorSettings = { type: "none" };
     switch (option.value) {
       case "none":
-        settings = { type: "none" };
+        processorSettings = { type: "none" };
         break;
       case "blur-standard":
-        settings = { type: "background-blur", config: {} };
+        processorSettings = { type: "background-blur", config: {} };
         break;
       case "blur-soft":
-        settings = { type: "background-blur", config: { strength: 0.25 } };
+        processorSettings = {
+          type: "background-blur",
+          config: { strength: 0.25 },
+        };
         break;
       case "blur-strong":
-        settings = { type: "background-blur", config: { strength: 1 } };
+        processorSettings = {
+          type: "background-blur",
+          config: { strength: 1 },
+        };
         break;
       case "image-1":
-        settings = { type: "background-image", config: { source: 1 } };
+        processorSettings = { type: "background-image", config: { source: 1 } };
         break;
       case "image-2":
-        settings = { type: "background-image", config: { source: 2 } };
+        processorSettings = { type: "background-image", config: { source: 2 } };
         break;
       case "image-3":
-        settings = { type: "background-image", config: { source: 3 } };
+        processorSettings = { type: "background-image", config: { source: 3 } };
         break;
     }
-    previewer.updateInputSettings({ video: { processor: settings } });
+    previewer.updateInputSettings({ video: { processor: processorSettings } });
+  });
+}
+
+function setupApplyEffectButtonClickHandler(
+  call: DailyCall,
+  previewer: DailyCall
+) {
+  const button = document.getElementById("apply-effect") as HTMLButtonElement;
+  button.addEventListener("click", async () => {
+    const previewedProcessorSettings = (await previewer.getInputSettings())
+      .video?.processor;
+    // Protect against empty, null, etc (which can happen if input settings
+    // were never set)
+    if (previewedProcessorSettings?.type) {
+      call.updateInputSettings({
+        video: { processor: previewedProcessorSettings },
+      });
+    } else {
+      call.updateInputSettings({
+        video: { processor: { type: "none" } },
+      });
+    }
   });
 }
 
@@ -183,4 +211,5 @@ document.addEventListener("DOMContentLoaded", () => {
   setupPreviewCamViewListeners(previewer);
   setupTogglePreviewButtonClickHandler(previewer);
   setupEffectsChangeListener(previewer);
+  setupApplyEffectButtonClickHandler(call, previewer);
 });
