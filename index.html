@@ -13,6 +13,23 @@
         <button id="toggle-preview">Toggle</button>
       </div>
       <video id="preview-cam" autoplay muted playsinline></video>
+      <div>
+        Background effect:
+        <select id="effects">
+          <option value="none">None</option>
+          <optgroup label="Blur">
+            <option value="blur-standard">Standard</option>
+            <option value="blur-soft">Soft</option>
+            <option value="blur-strong">Strong</option>
+          </optgroup>
+          <optgroup label="Image">
+            <option value="image-1">Image 1</option>
+            <option value="image-2">Image 2</option>
+            <option value="image-3">Image 3</option>
+          </optgroup>
+        </select>
+        <button id="apply-effect">Apply</button>
+      </div>
     </div>
   </body>
 </html>

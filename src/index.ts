@@ -1,4 +1,8 @@
-import Daily, { DailyCall, DailyMeetingState } from "@daily-co/daily-js";
+import Daily, {
+  DailyCall,
+  DailyInputVideoProcessorSettings,
+  DailyMeetingState,
+} from "@daily-co/daily-js";
 
 function setupLiveCallClient() {
   const call = Daily.createCallObject({
@@ -84,6 +88,40 @@ function setupJoinLeaveButtonClickHandler(call: DailyCall) {
   });
 }
 
+function setupEffectsChangeListener(previewer: DailyCall) {
+  const effectsSelectElement = document.getElementById(
+    "effects"
+  ) as HTMLSelectElement;
+  effectsSelectElement.addEventListener("change", () => {
+    const option = effectsSelectElement.selectedOptions[0];
+    let settings: DailyInputVideoProcessorSettings = { type: "none" };
+    switch (option.value) {
+      case "none":
+        settings = { type: "none" };
+        break;
+      case "blur-standard":
+        settings = { type: "background-blur", config: {} };
+        break;
+      case "blur-soft":
+        settings = { type: "background-blur", config: { strength: 0.25 } };
+        break;
+      case "blur-strong":
+        settings = { type: "background-blur", config: { strength: 1 } };
+        break;
+      case "image-1":
+        settings = { type: "background-image", config: { source: 0 } };
+        break;
+      case "image-2":
+        settings = { type: "background-image", config: { source: 1 } };
+        break;
+      case "image-3":
+        settings = { type: "background-image", config: { source: 2 } };
+        break;
+    }
+    previewer.updateInputSettings({ video: { processor: settings } });
+  });
+}
+
 function updateLiveCamView(track?: MediaStreamTrack | null) {
   const element = document.getElementById("live-cam") as HTMLVideoElement;
   updateCamView(element, track);
@@ -144,4 +182,5 @@ document.addEventListener("DOMContentLoaded", () => {
   setupJoinLeaveButtonClickHandler(call);
   setupPreviewCamViewListeners(previewer);
   setupTogglePreviewButtonClickHandler(previewer);
+  setupEffectsChangeListener(previewer);
 });
