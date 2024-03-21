@@ -17,7 +17,10 @@ function updatePublishedCamView(track?: MediaStreamTrack | null) {
 
 function updatePreviewCamView(track?: MediaStreamTrack) {}
 
-function updateJoinLeaveButton(meetingState: DailyMeetingState) {
+function updateJoinLeaveButton(
+  meetingState: DailyMeetingState,
+  optimisticDisable: boolean = false
+) {
   const joinLeaveButton = document.getElementById(
     "join-or-leave-call"
   ) as HTMLButtonElement;
@@ -26,11 +29,11 @@ function updateJoinLeaveButton(meetingState: DailyMeetingState) {
     case "left-meeting":
     case "error":
       joinLeaveButton.textContent = "Join";
-      joinLeaveButton.disabled = false;
+      joinLeaveButton.disabled = optimisticDisable || false;
       break;
     case "joined-meeting":
       joinLeaveButton.textContent = "Leave";
-      joinLeaveButton.disabled = false;
+      joinLeaveButton.disabled = optimisticDisable || false;
       break;
     default:
       joinLeaveButton.disabled = true;
@@ -72,19 +75,19 @@ document.addEventListener("DOMContentLoaded", () => {
   ) as HTMLButtonElement;
   joinLeaveButton.addEventListener("click", () => {
     const meetingState = call.meetingState();
+    updateJoinLeaveButton(meetingState, true);
     switch (meetingState) {
       case "new":
       case "left-meeting":
       case "error":
-        joinLeaveButton.disabled = true;
         call.join();
         break;
       case "joined-meeting":
-        joinLeaveButton.disabled = true;
         call.leave();
         break;
       default:
-        // Button should've been disabled in all other meeting states
+        // Button should've been disabled in all other meeting states, so it
+        // shouldn't be possible to get here
         break;
     }
   });
