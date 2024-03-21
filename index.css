@@ -1,5 +1,13 @@
-#join-or-leave-call {
+button {
   padding: 8px;
+}
+
+#preview-header > h1 {
+  display: inline-block;
+}
+
+#preview-header > button {
+  display: inline-block;
 }
 
 video {

@@ -1,6 +1,6 @@
 import Daily, { DailyCall, DailyMeetingState } from "@daily-co/daily-js";
 
-function setupCallClient() {
+function setupLiveCallClient() {
   const call = Daily.createCallObject({
     url: "https://paulk.staging.daily.co/hello",
   });
@@ -9,15 +9,46 @@ function setupCallClient() {
   return call;
 }
 
-function setupPublishedCamViewListeners(call: DailyCall) {
+function setupPreviewCallClient() {
+  const previewer = Daily.createCallObject({
+    startAudioOff: true,
+    dailyConfig: { alwaysIncludeMicInPermissionPrompt: false },
+    strictMode: false, // allow multiple call clients
+  });
+  //@ts-ignore
+  window.previewer = previewer;
+  return previewer;
+}
+
+function setupTogglePreviewButtonClickHandler(previewer: DailyCall) {
+  const togglePreviewButton = document.getElementById(
+    "toggle-preview"
+  ) as HTMLButtonElement;
+  togglePreviewButton.addEventListener("click", () => {
+    if (previewer.meetingState() === "new") {
+      previewer.startCamera();
+    } else {
+      previewer.setLocalVideo(!previewer.localVideo());
+    }
+  });
+}
+
+function setupLiveCamViewListeners(call: DailyCall) {
   call.on("participant-updated", (event) => {
     if (!event.participant.local) {
       return;
     }
-    updatePublishedCamView(event.participant.tracks.video.track);
+    updateLiveCamView(event.participant.tracks.video.track);
   });
-  call.on("left-meeting", () => updatePublishedCamView(null));
-  call.on("error", () => updatePublishedCamView(null));
+  call.on("left-meeting", () => updateLiveCamView(null));
+  call.on("error", () => updateLiveCamView(null));
+}
+
+function setupPreviewCamViewListeners(previewer: DailyCall) {
+  previewer.on("participant-updated", (event) => {
+    // There's only ever a local participant in the previewer call client
+    updatePreviewCamView(event.participant.tracks.video.track);
+  });
 }
 
 function setupJoinLeaveButtonStateListeners(call: DailyCall) {
@@ -53,22 +84,28 @@ function setupJoinLeaveButtonClickHandler(call: DailyCall) {
   });
 }
 
-function updatePublishedCamView(track?: MediaStreamTrack | null) {
-  const publishedCamElement = document.getElementById(
-    "published-cam"
-  ) as HTMLVideoElement;
-
-  if (!track) {
-    publishedCamElement.srcObject = null;
-  } else if (
-    (publishedCamElement.srcObject as MediaStream)?.getVideoTracks()[0] !==
-    track
-  ) {
-    publishedCamElement.srcObject = new MediaStream([track]);
-  }
+function updateLiveCamView(track?: MediaStreamTrack | null) {
+  const element = document.getElementById("live-cam") as HTMLVideoElement;
+  updateCamView(element, track);
 }
 
-function updatePreviewCamView(track?: MediaStreamTrack) {}
+function updatePreviewCamView(track?: MediaStreamTrack | null) {
+  const element = document.getElementById("preview-cam") as HTMLVideoElement;
+  updateCamView(element, track);
+}
+
+function updateCamView(
+  element: HTMLVideoElement,
+  track?: MediaStreamTrack | null
+) {
+  if (!track) {
+    element.srcObject = null;
+  } else if (
+    (element.srcObject as MediaStream)?.getVideoTracks()[0] !== track
+  ) {
+    element.srcObject = new MediaStream([track]);
+  }
+}
 
 function updateJoinLeaveButton(
   meetingState: DailyMeetingState,
@@ -95,13 +132,16 @@ function updateJoinLeaveButton(
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const call = setupCallClient();
+  const call = setupLiveCallClient();
+  const previewer = setupPreviewCallClient();
 
   // Initialize UI
   updateJoinLeaveButton(call.meetingState());
 
   // Wire up listeners/handlers
-  setupPublishedCamViewListeners(call);
+  setupLiveCamViewListeners(call);
   setupJoinLeaveButtonStateListeners(call);
   setupJoinLeaveButtonClickHandler(call);
+  setupPreviewCamViewListeners(previewer);
+  setupTogglePreviewButtonClickHandler(previewer);
 });
