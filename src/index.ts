@@ -109,13 +109,13 @@ function setupEffectsChangeListener(previewer: DailyCall) {
         settings = { type: "background-blur", config: { strength: 1 } };
         break;
       case "image-1":
-        settings = { type: "background-image", config: { source: 0 } };
-        break;
-      case "image-2":
         settings = { type: "background-image", config: { source: 1 } };
         break;
-      case "image-3":
+      case "image-2":
         settings = { type: "background-image", config: { source: 2 } };
+        break;
+      case "image-3":
+        settings = { type: "background-image", config: { source: 3 } };
         break;
     }
     previewer.updateInputSettings({ video: { processor: settings } });
