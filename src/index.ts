@@ -242,7 +242,7 @@ function setupDeviceListUpdateListener(call: DailyCall) {
   });
 }
 
-function setupDeviceSelectListener(call: DailyCall) {
+function setupDeviceSelectListener(call: DailyCall, previewer: DailyCall) {
   const deviceSelectElement = document.getElementById(
     "devices"
   ) as HTMLSelectElement;
@@ -250,6 +250,7 @@ function setupDeviceSelectListener(call: DailyCall) {
   deviceSelectElement.addEventListener("change", () => {
     const option = deviceSelectElement.selectedOptions[0];
     call.setInputDevicesAsync({ videoDeviceId: option.value });
+    previewer.setInputDevicesAsync({ videoDeviceId: option.value });
   });
 }
 
@@ -270,5 +271,5 @@ document.addEventListener("DOMContentLoaded", () => {
   setupEffectsChangeListener(previewer);
   setupApplyEffectButtonClickHandler(call, previewer);
   setupDeviceListUpdateListener(call);
-  setupDeviceSelectListener(call);
+  setupDeviceSelectListener(call, previewer);
 });
