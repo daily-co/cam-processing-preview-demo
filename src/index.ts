@@ -197,12 +197,69 @@ function updateJoinLeaveButton(
   }
 }
 
+function updateDeviceSelectElement(call: DailyCall) {
+  const deviceSelectElement = document.getElementById(
+    "devices"
+  ) as HTMLSelectElement;
+
+  // TODO: handle selecting a device right off the bat
+  // (might not matter for this demo, where we don't have cookies)
+
+  call.enumerateDevices().then((devices) => {
+    // Get list of old device options
+    const oldDeviceOptions: Record<string, HTMLOptionElement> = {};
+    for (const deviceOption of deviceSelectElement.options) {
+      oldDeviceOptions[deviceOption.value] = deviceOption;
+    }
+
+    // Add/update devices in select element
+    const cameraDevices = devices.devices.filter((d) => d.kind == "videoinput");
+    for (const device of cameraDevices) {
+      let option = oldDeviceOptions[device.deviceId];
+      if (option) {
+        // Device still around: remove it from old device list so later we can
+        // remove from the select element any devices that went away
+        delete oldDeviceOptions[device.deviceId];
+      } else {
+        // Create option element for a new device
+        option = new Option();
+        option.value = device.deviceId;
+        deviceSelectElement.appendChild(option);
+      }
+      option.text = device.label;
+    }
+
+    // Remove devices that went away from select element
+    for (const oldDeviceOption of Object.values(oldDeviceOptions)) {
+      oldDeviceOption.remove();
+    }
+  });
+}
+
+function setupDeviceListUpdateListener(call: DailyCall) {
+  call.on("available-devices-updated", () => {
+    updateDeviceSelectElement(call);
+  });
+}
+
+function setupDeviceSelectListener(call: DailyCall) {
+  const deviceSelectElement = document.getElementById(
+    "devices"
+  ) as HTMLSelectElement;
+
+  deviceSelectElement.addEventListener("change", () => {
+    const option = deviceSelectElement.selectedOptions[0];
+    call.setInputDevicesAsync({ videoDeviceId: option.value });
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const call = setupLiveCallClient();
   const previewer = setupPreviewCallClient();
 
   // Initialize UI
   updateJoinLeaveButton(call.meetingState());
+  updateDeviceSelectElement(call);
 
   // Wire up listeners/handlers
   setupLiveCamViewListeners(call);
@@ -212,4 +269,6 @@ document.addEventListener("DOMContentLoaded", () => {
   setupTogglePreviewButtonClickHandler(previewer);
   setupEffectsChangeListener(previewer);
   setupApplyEffectButtonClickHandler(call, previewer);
+  setupDeviceListUpdateListener(call);
+  setupDeviceSelectListener(call);
 });
