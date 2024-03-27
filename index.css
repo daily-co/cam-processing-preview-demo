@@ -2,11 +2,11 @@ button {
   padding: 8px;
 }
 
-#preview-header > h1 {
+.header > h1 {
   display: inline-block;
 }
 
-#preview-header > button {
+.header > button {
   display: inline-block;
 }
 
