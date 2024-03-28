@@ -134,19 +134,7 @@ function setupApplyEffectButtonClickHandler(
 ) {
   const button = document.getElementById("apply-effect") as HTMLButtonElement;
   button.addEventListener("click", async () => {
-    const previewedProcessorSettings = (await previewer.getInputSettings())
-      .video?.processor;
-    // Protect against empty, null, etc (which can happen if input settings
-    // were never set)
-    if (previewedProcessorSettings?.type) {
-      call.updateInputSettings({
-        video: { processor: previewedProcessorSettings },
-      });
-    } else {
-      call.updateInputSettings({
-        video: { processor: { type: "none" } },
-      });
-    }
+    call.updateInputSettings(await previewer.getInputSettings());
   });
 }
 
