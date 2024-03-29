@@ -1,273 +1,49 @@
-import Daily, {
-  DailyCall,
-  DailyInputVideoProcessorSettings,
-  DailyMeetingState,
-} from "@daily-co/daily-js";
-
-function setupLiveCallClient() {
-  const call = Daily.createCallObject({
-    url: "https://paulk.staging.daily.co/hello",
-  });
-  //@ts-ignore
-  window.call = call;
-  return call;
-}
-
-function setupPreviewCallClient() {
-  const previewer = Daily.createCallObject({
-    startAudioOff: true,
-    startVideoOff: true,
-    dailyConfig: { alwaysIncludeMicInPermissionPrompt: false },
-    strictMode: false, // allow multiple call clients
-  });
-  //@ts-ignore
-  window.previewer = previewer;
-  // This doesn't actually turn on the camera, since startVideoOff was set.
-  // It just initializes the previewer. Yeah, I know :/
-  previewer.startCamera();
-  return previewer;
-}
-
-function setupTogglePreviewButtonClickHandler(previewer: DailyCall) {
-  const togglePreviewButton = document.getElementById(
-    "toggle-preview"
-  ) as HTMLButtonElement;
-  togglePreviewButton.addEventListener("click", () => {
-    previewer.setLocalVideo(!previewer.localVideo());
-  });
-}
-
-function setupLiveCamViewListeners(call: DailyCall) {
-  call.on("participant-updated", (event) => {
-    if (!event.participant.local) {
-      return;
-    }
-    updateLiveCamView(event.participant.tracks.video.track);
-  });
-  call.on("left-meeting", () => updateLiveCamView(null));
-  call.on("error", () => updateLiveCamView(null));
-}
-
-function setupPreviewCamViewListeners(previewer: DailyCall) {
-  previewer.on("participant-updated", (event) => {
-    // There's only ever a local participant in the previewer call client
-    updatePreviewCamView(event.participant.tracks.video.track);
-  });
-}
-
-function setupJoinLeaveButtonStateListeners(call: DailyCall) {
-  call.on("joining-meeting", () => updateJoinLeaveButton(call.meetingState()));
-  call.on("joined-meeting", () => updateJoinLeaveButton(call.meetingState()));
-  call.on("left-meeting", () => updateJoinLeaveButton(call.meetingState()));
-  call.on("error", () => updateJoinLeaveButton(call.meetingState()));
-  call.on("loading", () => updateJoinLeaveButton(call.meetingState()));
-  call.on("loaded", () => updateJoinLeaveButton(call.meetingState()));
-}
-
-function setupJoinLeaveButtonClickHandler(call: DailyCall) {
-  const joinLeaveButton = document.getElementById(
-    "join-or-leave-call"
-  ) as HTMLButtonElement;
-  joinLeaveButton.addEventListener("click", () => {
-    const meetingState = call.meetingState();
-    updateJoinLeaveButton(meetingState, true);
-    switch (meetingState) {
-      case "new":
-      case "left-meeting":
-      case "error":
-        call.join();
-        break;
-      case "joined-meeting":
-        call.leave();
-        break;
-      default:
-        // Button should've been disabled in all other meeting states, so it
-        // shouldn't be possible to get here
-        break;
-    }
-  });
-}
-
-function setupEffectsChangeListener(previewer: DailyCall) {
-  const effectsSelectElement = document.getElementById(
-    "effects"
-  ) as HTMLSelectElement;
-  effectsSelectElement.addEventListener("change", () => {
-    const option = effectsSelectElement.selectedOptions[0];
-    let processorSettings: DailyInputVideoProcessorSettings = { type: "none" };
-    switch (option.value) {
-      case "none":
-        processorSettings = { type: "none" };
-        break;
-      case "blur-standard":
-        processorSettings = { type: "background-blur", config: {} };
-        break;
-      case "blur-soft":
-        processorSettings = {
-          type: "background-blur",
-          config: { strength: 0.25 },
-        };
-        break;
-      case "blur-strong":
-        processorSettings = {
-          type: "background-blur",
-          config: { strength: 1 },
-        };
-        break;
-      case "image-1":
-        processorSettings = { type: "background-image", config: { source: 1 } };
-        break;
-      case "image-2":
-        processorSettings = { type: "background-image", config: { source: 2 } };
-        break;
-      case "image-3":
-        processorSettings = { type: "background-image", config: { source: 3 } };
-        break;
-    }
-    previewer.updateInputSettings({ video: { processor: processorSettings } });
-  });
-}
-
-function setupApplyEffectButtonClickHandler(
-  call: DailyCall,
-  previewer: DailyCall
-) {
-  const button = document.getElementById("apply-effect") as HTMLButtonElement;
-  button.addEventListener("click", async () => {
-    call.updateInputSettings(await previewer.getInputSettings());
-  });
-}
-
-function updateLiveCamView(track?: MediaStreamTrack | null) {
-  const element = document.getElementById("live-cam") as HTMLVideoElement;
-  updateCamView(element, track);
-}
-
-function updatePreviewCamView(track?: MediaStreamTrack | null) {
-  const element = document.getElementById("preview-cam") as HTMLVideoElement;
-  updateCamView(element, track);
-}
-
-function updateCamView(
-  element: HTMLVideoElement,
-  track?: MediaStreamTrack | null
-) {
-  if (!track) {
-    element.srcObject = null;
-  } else if (
-    (element.srcObject as MediaStream)?.getVideoTracks()[0] !== track
-  ) {
-    element.srcObject = new MediaStream([track]);
-  }
-}
-
-function updateJoinLeaveButton(
-  meetingState: DailyMeetingState,
-  optimisticDisable: boolean = false
-) {
-  const joinLeaveButton = document.getElementById(
-    "join-or-leave-call"
-  ) as HTMLButtonElement;
-  switch (meetingState) {
-    case "new":
-    case "left-meeting":
-    case "error":
-      joinLeaveButton.textContent = "Join";
-      joinLeaveButton.disabled = optimisticDisable || false;
-      break;
-    case "joined-meeting":
-      joinLeaveButton.textContent = "Leave";
-      joinLeaveButton.disabled = optimisticDisable || false;
-      break;
-    default:
-      joinLeaveButton.disabled = true;
-      break;
-  }
-}
-
-function updateDeviceSelectElement(call: DailyCall) {
-  const deviceSelectElement = document.getElementById(
-    "devices"
-  ) as HTMLSelectElement;
-
-  // TODO: handle selecting a device right off the bat
-  // (might not matter for this demo, where we don't store device pref in
-  // cookies and so we assume the first-listed device will be selected initially)
-
-  call.enumerateDevices().then((devices) => {
-    // Get list of old device options
-    const oldDeviceOptions: Record<string, HTMLOptionElement> = {};
-    for (const deviceOption of deviceSelectElement.options) {
-      oldDeviceOptions[deviceOption.value] = deviceOption;
-    }
-
-    // Add/update devices in select element
-    const cameraDevices = devices.devices.filter((d) => d.kind == "videoinput");
-    for (const device of cameraDevices) {
-      let option = oldDeviceOptions[device.deviceId];
-      if (option) {
-        // Device still around: remove it from old device list so later we can
-        // remove from the select element any devices that went away
-        delete oldDeviceOptions[device.deviceId];
-      } else {
-        // Create option element for a new device
-        option = new Option();
-        option.value = device.deviceId;
-        deviceSelectElement.appendChild(option);
-      }
-      option.text = device.label;
-    }
-
-    // Remove devices that went away from select element
-    for (const oldDeviceOption of Object.values(oldDeviceOptions)) {
-      oldDeviceOption.remove();
-    }
-  });
-}
-
-function setupDeviceListUpdateListener(call: DailyCall, previewer: DailyCall) {
-  call.on("available-devices-updated", () => {
-    updateDeviceSelectElement(call);
-  });
-  // The below is for FF: we don't get labels for devices until first gUM occurs.
-  // Listening for track started is one way (but not the only way) to try
-  // something after gUM has happened at least once.
-  call.on("track-started", () => {
-    updateDeviceSelectElement(call);
-  });
-  previewer.on("track-started", () => {
-    updateDeviceSelectElement(previewer);
-  });
-}
-
-function setupDeviceSelectListener(call: DailyCall, previewer: DailyCall) {
-  const deviceSelectElement = document.getElementById(
-    "devices"
-  ) as HTMLSelectElement;
-
-  deviceSelectElement.addEventListener("change", () => {
-    const option = deviceSelectElement.selectedOptions[0];
-    call.setInputDevicesAsync({ videoDeviceId: option.value });
-    previewer.setInputDevicesAsync({ videoDeviceId: option.value });
-  });
-}
+import { setupLiveCallClient, setupPreviewCallClient } from "./call-clients";
+import {
+  setupJoinLeaveButtonClickHandler,
+  setupJoinLeaveButtonStateListeners,
+  updateJoinLeaveButton,
+} from "./join-leave-button";
+import {
+  setupDeviceListUpdateListener,
+  setupDeviceSelectListener,
+  updateDeviceSelector,
+} from "./device-selector";
+import {
+  setupLiveCamViewListeners,
+  setupPreviewCamViewListeners,
+  setupTogglePreviewButtonClickHandler,
+} from "./cam-views";
+import {
+  setupApplyEffectButtonClickHandler,
+  setupEffectSelectListener,
+} from "./effect-selector";
 
 document.addEventListener("DOMContentLoaded", () => {
   const call = setupLiveCallClient();
   const previewer = setupPreviewCallClient();
 
-  // Initialize UI
+  // Join/leave button
+  // - set initial state
   updateJoinLeaveButton(call.meetingState());
-  updateDeviceSelectElement(call);
-
-  // Wire up listeners/handlers
-  setupLiveCamViewListeners(call);
+  // - set listeners
   setupJoinLeaveButtonStateListeners(call);
   setupJoinLeaveButtonClickHandler(call);
-  setupPreviewCamViewListeners(previewer);
-  setupTogglePreviewButtonClickHandler(previewer);
-  setupEffectsChangeListener(previewer);
-  setupApplyEffectButtonClickHandler(call, previewer);
+
+  // Device selector
+  // - set initial state
+  updateDeviceSelector(call);
+  // - set listeners
   setupDeviceListUpdateListener(call, previewer);
   setupDeviceSelectListener(call, previewer);
+
+  // Cam views & preview toggle button
+  // - set listeners
+  setupLiveCamViewListeners(call);
+  setupPreviewCamViewListeners(previewer);
+  setupTogglePreviewButtonClickHandler(previewer);
+
+  // Effect selector & apply button
+  setupEffectSelectListener(previewer);
+  setupApplyEffectButtonClickHandler(call, previewer);
 });
