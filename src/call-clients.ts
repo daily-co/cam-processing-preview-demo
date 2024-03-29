@@ -2,7 +2,7 @@ import Daily from "@daily-co/daily-js";
 
 export function setupLiveCallClient() {
   const call = Daily.createCallObject({
-    url: "https://paulk.staging.daily.co/hello",
+    url: "https://<your-domain-here>.daily.co/<your-room-name-here>",
   });
   //@ts-ignore
   window.call = call;

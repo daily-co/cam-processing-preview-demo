@@ -3,9 +3,9 @@
 ```bash
 nvm i
 
-npm i /your/path/to/daily-js
+npm i
 
 npm run dev
 
-# now, edit index.ts to use your room url
+# now, edit `setupLiveCallClient()` in call-clients.ts to use your room url
 ```
