@@ -44,6 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupTogglePreviewButtonClickHandler(previewer);
 
   // Effect selector & apply button
+  // - set listeners
   setupEffectSelectListener(previewer);
   setupApplyEffectButtonClickHandler(call, previewer);
 });
