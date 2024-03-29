@@ -16,11 +16,15 @@ function setupLiveCallClient() {
 function setupPreviewCallClient() {
   const previewer = Daily.createCallObject({
     startAudioOff: true,
+    startVideoOff: true,
     dailyConfig: { alwaysIncludeMicInPermissionPrompt: false },
     strictMode: false, // allow multiple call clients
   });
   //@ts-ignore
   window.previewer = previewer;
+  // This doesn't actually turn on the camera, since startVideoOff was set.
+  // It just initializes the previewer. Yeah, I know :/
+  previewer.startCamera();
   return previewer;
 }
 
@@ -29,11 +33,7 @@ function setupTogglePreviewButtonClickHandler(previewer: DailyCall) {
     "toggle-preview"
   ) as HTMLButtonElement;
   togglePreviewButton.addEventListener("click", () => {
-    if (previewer.meetingState() === "new") {
-      previewer.startCamera();
-    } else {
-      previewer.setLocalVideo(!previewer.localVideo());
-    }
+    previewer.setLocalVideo(!previewer.localVideo());
   });
 }
 
