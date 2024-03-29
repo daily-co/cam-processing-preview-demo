@@ -191,7 +191,8 @@ function updateDeviceSelectElement(call: DailyCall) {
   ) as HTMLSelectElement;
 
   // TODO: handle selecting a device right off the bat
-  // (might not matter for this demo, where we don't have cookies)
+  // (might not matter for this demo, where we don't store device pref in
+  // cookies and so we assume the first-listed device will be selected initially)
 
   call.enumerateDevices().then((devices) => {
     // Get list of old device options
@@ -224,9 +225,18 @@ function updateDeviceSelectElement(call: DailyCall) {
   });
 }
 
-function setupDeviceListUpdateListener(call: DailyCall) {
+function setupDeviceListUpdateListener(call: DailyCall, previewer: DailyCall) {
   call.on("available-devices-updated", () => {
     updateDeviceSelectElement(call);
+  });
+  // The below is for FF: we don't get labels for devices until first gUM occurs.
+  // Listening for track started is one way (but not the only way) to try
+  // something after gUM has happened at least once.
+  call.on("track-started", () => {
+    updateDeviceSelectElement(call);
+  });
+  previewer.on("track-started", () => {
+    updateDeviceSelectElement(previewer);
   });
 }
 
@@ -258,6 +268,6 @@ document.addEventListener("DOMContentLoaded", () => {
   setupTogglePreviewButtonClickHandler(previewer);
   setupEffectsChangeListener(previewer);
   setupApplyEffectButtonClickHandler(call, previewer);
-  setupDeviceListUpdateListener(call);
+  setupDeviceListUpdateListener(call, previewer);
   setupDeviceSelectListener(call, previewer);
 });
