@@ -4,7 +4,7 @@
   "description": "",
   "private": true,
   "scripts": {
-    "dev": "npx webpack serve --port 3000 --open"
+    "dev": "npx webpack serve --open"
   },
   "author": "",
   "license": "ISC",
