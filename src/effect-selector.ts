@@ -3,7 +3,7 @@ import {
   DailyInputVideoProcessorSettings,
 } from "@daily-co/daily-js";
 
-export function setupEffectSelectListener(previewer: DailyCall) {
+export function setupEffectSelectHandler(previewer: DailyCall) {
   const effectsSelectElement = document.getElementById(
     "effects"
   ) as HTMLSelectElement;

@@ -1,5 +1,7 @@
 import { DailyCall } from "@daily-co/daily-js";
 
+// This function updates the device selector dropdown to match the
+// current set of enumerated devices provided by the daily call.
 export function updateDeviceSelector(call: DailyCall) {
   const deviceSelectElement = document.getElementById(
     "devices"
@@ -40,6 +42,8 @@ export function updateDeviceSelector(call: DailyCall) {
   });
 }
 
+// Update the device list any time the list of available devices changes
+// (And work-around for a Firefox nuance)
 export function setupDeviceListUpdateListener(
   call: DailyCall,
   previewer: DailyCall
@@ -58,7 +62,9 @@ export function setupDeviceListUpdateListener(
   });
 }
 
-export function setupDeviceSelectListener(
+// Any time the user selects a device, be sure to update both the
+// live call instance and the previewer instance
+export function setupDeviceSelectHandler(
   call: DailyCall,
   previewer: DailyCall
 ) {
