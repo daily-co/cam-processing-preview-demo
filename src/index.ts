@@ -1,14 +1,6 @@
 import { setupLiveCallClient, setupPreviewCallClient } from "./call-clients";
-import {
-  setupJoinLeaveButtonClickHandler,
-  setupJoinLeaveButtonStateListeners,
-  updateJoinLeaveButton,
-} from "./join-leave-button";
-import {
-  setupDeviceListUpdateListener,
-  setupDeviceSelectListener,
-  updateDeviceSelector,
-} from "./device-selector";
+import { setupJoinLeaveButton } from "./join-leave-button";
+import { setupDeviceSelector } from "./device-selector";
 import {
   setupLiveCamViewListeners,
   setupPreviewCamViewListeners,
@@ -16,7 +8,7 @@ import {
 } from "./cam-views";
 import {
   setupApplyEffectButtonClickHandler,
-  setupEffectSelectListener,
+  setupEffectSelectorHandler,
 } from "./effect-selector";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -24,27 +16,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const previewer = setupPreviewCallClient();
 
   // Join/leave button
-  // - set initial state
-  updateJoinLeaveButton(call.meetingState());
-  // - set listeners
-  setupJoinLeaveButtonStateListeners(call);
-  setupJoinLeaveButtonClickHandler(call);
+  setupJoinLeaveButton(call);
 
   // Device selector
-  // - set initial state
-  updateDeviceSelector(call);
-  // - set listeners
-  setupDeviceListUpdateListener(call, previewer);
-  setupDeviceSelectListener(call, previewer);
+  setupDeviceSelector(call, previewer);
 
   // Cam views & preview toggle button
-  // - set listeners
+  // - setup daily event listeners
   setupLiveCamViewListeners(call);
   setupPreviewCamViewListeners(previewer);
+  // - setup ui event listener
   setupTogglePreviewButtonClickHandler(previewer);
 
-  // Effect selector & apply button
-  // - set listeners
-  setupEffectSelectListener(previewer);
+  // Background Effect selector & apply button
+  // - set ui event listeners
+  setupEffectSelectorHandler(previewer);
   setupApplyEffectButtonClickHandler(call, previewer);
 });

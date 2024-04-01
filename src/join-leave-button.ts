@@ -1,6 +1,14 @@
 import { DailyCall, DailyMeetingState } from "@daily-co/daily-js";
 
-export function updateJoinLeaveButton(
+export function setupJoinLeaveButton(call: DailyCall) {
+  // - set initial state
+  updateJoinLeaveButton(call.meetingState());
+  // - set listeners
+  setupJoinLeaveButtonStateListeners(call);
+  setupJoinLeaveButtonClickHandler(call);
+}
+
+function updateJoinLeaveButton(
   meetingState: DailyMeetingState,
   optimisticDisable: boolean = false
 ) {
@@ -24,7 +32,7 @@ export function updateJoinLeaveButton(
   }
 }
 
-export function setupJoinLeaveButtonStateListeners(call: DailyCall) {
+function setupJoinLeaveButtonStateListeners(call: DailyCall) {
   call.on("joining-meeting", () => updateJoinLeaveButton(call.meetingState()));
   call.on("joined-meeting", () => updateJoinLeaveButton(call.meetingState()));
   call.on("left-meeting", () => updateJoinLeaveButton(call.meetingState()));
@@ -33,7 +41,7 @@ export function setupJoinLeaveButtonStateListeners(call: DailyCall) {
   call.on("loaded", () => updateJoinLeaveButton(call.meetingState()));
 }
 
-export function setupJoinLeaveButtonClickHandler(call: DailyCall) {
+function setupJoinLeaveButtonClickHandler(call: DailyCall) {
   const joinLeaveButton = document.getElementById(
     "join-or-leave-call"
   ) as HTMLButtonElement;

@@ -1,6 +1,14 @@
 import { DailyCall } from "@daily-co/daily-js";
 
-export function updateDeviceSelector(call: DailyCall) {
+export function setupDeviceSelector(call: DailyCall, previewer: DailyCall) {
+  // - set initial state
+  updateDeviceSelector(call);
+  // - set listeners
+  setupDeviceListUpdateListener(call, previewer);
+  setupDeviceSelectHandler(call, previewer);
+}
+
+function updateDeviceSelector(call: DailyCall) {
   const deviceSelectElement = document.getElementById(
     "devices"
   ) as HTMLSelectElement;
@@ -40,10 +48,7 @@ export function updateDeviceSelector(call: DailyCall) {
   });
 }
 
-export function setupDeviceListUpdateListener(
-  call: DailyCall,
-  previewer: DailyCall
-) {
+function setupDeviceListUpdateListener(call: DailyCall, previewer: DailyCall) {
   call.on("available-devices-updated", () => {
     updateDeviceSelector(call);
   });
@@ -58,10 +63,7 @@ export function setupDeviceListUpdateListener(
   });
 }
 
-export function setupDeviceSelectListener(
-  call: DailyCall,
-  previewer: DailyCall
-) {
+function setupDeviceSelectHandler(call: DailyCall, previewer: DailyCall) {
   const deviceSelectElement = document.getElementById(
     "devices"
   ) as HTMLSelectElement;
