@@ -43,7 +43,7 @@ export function updateDeviceSelector(call: DailyCall) {
 }
 
 // Update the device list any time the list of available devices changes
-// (And work-around for a Firefox nuance)
+// (And work-around for a nuance around device labels becoming available)
 export function setupDeviceListUpdateListener(
   call: DailyCall,
   previewer: DailyCall
@@ -51,7 +51,7 @@ export function setupDeviceListUpdateListener(
   call.on("available-devices-updated", () => {
     updateDeviceSelector(call);
   });
-  // The below is for FF: we don't get labels for devices until first gUM occurs.
+  // We won't get labels for devices until first gUM occurs.
   // Listening for track started is one way (but not the only way) to try
   // something after gUM has happened at least once.
   call.on("track-started", () => {
